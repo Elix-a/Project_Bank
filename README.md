@@ -7,6 +7,7 @@
 - Парсинга дат из формата ISO 8601 (`YYYY-MM-DDTHH:MM:SS.ffffff`) в формат `DD.MM.YYYY`.
 - Фильтрации и сортировки списков банковских транзакций.
 - Генерации и фильтрации данных транзакций.
+- Логирования вызовов функций.
 
 ## Модули
 
@@ -14,6 +15,15 @@
 - `src.widget`: Основной модуль с функциями `mask_account_card` и `get_date`.
 - `src.processing`: Модуль для обработки данных транзакций (`filter_by_state`, `sort_by_date`).
 - `src.generators`: Модуль для генерации и фильтрации данных транзакций (`filter_by_currency`, `transaction_descriptions`, `card_number_generator`).
+- `src.decorators`: Модуль для декораторов (`log`).
+- `src.utils`: Модуль для вспомогательных функций, включая загрузку транзакций из JSON (`load_transactions_from_json`).
+- `src.external_api`: Модуль для взаимодействия с внешними API, например, для конвертации валюты (`convert_to_rub`).
+
+## зависимости
+
+Проект использует следующие дополнительные библиотеки:
+- `requests`: Для отправки HTTP-запросов к внешним API.
+- `python-dotenv`: Для загрузки переменных окружения из файла `.env`.
 
 ## Примеры использования
 
@@ -34,7 +44,7 @@ print(mask_account_card("Счет 73654108430135874305"))
 print(get_date("2024-03-11T02:26:18.671407"))
 # Вывод: 11.03.2024
 ```
-## Обработка транзакций
+### Обработка транзакций
 ```python
 from src.processing import filter_by_state, sort_by_date
 
@@ -55,8 +65,9 @@ print(sorted_txs)
 # Сортировка по возрастанию (старые сначала)
 sorted_asc_txs = sort_by_date(transactions, ascending=True)
 print(sorted_asc_txs)
-````
-## Генерация и фильтрация данных транзакций
+```
+###  Генерация и фильтрация данных транзакций
+
 ```python
 from src.generators.generators import filter_by_currency, transaction_descriptions, card_number_generator
 
@@ -93,14 +104,66 @@ for _ in range(2):
 for card_number in card_number_generator(1, 3):
     print(card_number)
 ```
+
+## Логирование вызовов функций
+```python
+from src.decorators.decorators import log
+
+# Пример декорирования функции для логирования в файл
+@log(filename="function_calls.log")
+def calculate_sum(a, b):
+    return a + b
+
+# Пример декорирования функции для логирования в консоль
+@log() # filename=None по умолчанию
+def divide_numbers(x, y):
+    if y == 0:
+        raise ZeroDivisionError("Cannot divide by zero")
+    return x / y
+
+# Вызовы функций
+result1 = calculate_sum(5, 3) # Запишет "calculate_sum ok" в function_calls.log
+print(f"Sum result: {result1}")
+
+try:
+    result2 = divide_numbers(10, 0) # Запишет ошибку в stdout
+except ZeroDivisionError as e:
+    print(f"Caught error: {e}")
+
+result3 = divide_numbers(10, 2) # Запишет "divide_numbers ok" в stdout
+print(f"Division result: {result3}")
+```
+
+## Логирование
+
+Проект использует библиотеку `logging` для отслеживания работы приложения.
+Логи записываются в файлы в папке `logs/`:
+- `logs/utils.log` - логи модуля `utils` (например, загрузка транзакций).
+- `logs/masks.log` - логи модуля `masks` (например, маскировка номеров).
+
+Формат логов: `%(asctime)s - %(name)s - %(levelname)s - %(message)s`.
+
+## Чтение транзакций из файлов
+
+Проект теперь поддерживает чтение транзакций из файлов формата CSV и Excel (XLSX).
+
+- `src.readers.read_transactions_from_csv(file_path)` - читает транзакции из CSV.
+- `src.readers.read_transactions_from_excel(file_path)` - читает транзакции из Excel.
+
 ## Тестирование
-
 ### Проект использует фреймворк pytest для написания и запуска тестов.
-
 #### Для запуска всех тестов выполните:
+
+```bash
+poetry run pytest
+```
+
+####  Для запуска тестов с отчётом о покрытии в формате HTML:
+
 ```bash
 poetry run pytest --cov=src --cov-report=html
 ```
+
 #### Отчёт будет доступен в файле htmlcov/index.html.
 
 ## Установка и запуск
@@ -108,15 +171,21 @@ poetry run pytest --cov=src --cov-report=html
 ### Для работы с проектом требуется Python 3.10+ и менеджер зависимостей Poetry.
 
 #### 1. Клонируйте репозиторий:
+
 ```bash
 git clone https://github.com/Elix-a/Project_Bank.git
 cd Project_Bank
 ```
+
 #### 2. Установите зависимости:
 
 ```bash
 poetry install
 ```
+```bash
+2. Скопируйте файл `.env.example` в `.env` и укажите свои значения переменных (например, API-ключи).
+```
 
-### Лицензия
-#### MIT
+## Лицензия
+
+MIT
