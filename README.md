@@ -73,5 +73,21 @@ cd Project_Bank
 poetry install
 ```
 
+## Тестирование
+
+Проект использует фреймворк `pytest` для написания и запуска тестов.
+
+Для запуска всех тестов выполните:
+```
+```bash
+poetry run pytest
+```
+
+### Для запуска тестов с отчётом о покрытии в формате HTML:
+```bash
+poetry run pytest --cov=src --cov-report=html
+```
+### Отчёт будет доступен в файле [htmlcov/index.html.]()
+
 ## Лицензия
 MIT
