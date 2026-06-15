@@ -6,7 +6,7 @@
 - Маскировки номеров банковских счетов (формат: `**XXXX`).
 - Парсинга дат из формата ISO 8601 (`YYYY-MM-DDTHH:MM:SS.ffffff`) в формат `DD.MM.YYYY`.
 - Фильтрации и сортировки списков банковских транзакций.
-- Генерации и фильтрации данных транзакций.
+- Генерации и фильтрации данных транзакций с использованием генераторов Python.
 
 ## Модули
 
@@ -34,7 +34,7 @@ print(mask_account_card("Счет 73654108430135874305"))
 print(get_date("2024-03-11T02:26:18.671407"))
 # Вывод: 11.03.2024
 ```
-## Обработка транзакций
+### Обработка транзакций
 ```python
 from src.processing import filter_by_state, sort_by_date
 
@@ -55,8 +55,9 @@ print(sorted_txs)
 # Сортировка по возрастанию (старые сначала)
 sorted_asc_txs = sort_by_date(transactions, ascending=True)
 print(sorted_asc_txs)
-````
-## Генерация и фильтрация данных транзакций
+```
+###  Генерация и фильтрация данных транзакций
+
 ```python
 from src.generators.generators import filter_by_currency, transaction_descriptions, card_number_generator
 
@@ -93,14 +94,21 @@ for _ in range(2):
 for card_number in card_number_generator(1, 3):
     print(card_number)
 ```
+
 ## Тестирование
-
 ### Проект использует фреймворк pytest для написания и запуска тестов.
-
 #### Для запуска всех тестов выполните:
+
+```bash
+poetry run pytest
+```
+
+####  Для запуска тестов с отчётом о покрытии в формате HTML:
+
 ```bash
 poetry run pytest --cov=src --cov-report=html
 ```
+
 #### Отчёт будет доступен в файле htmlcov/index.html.
 
 ## Установка и запуск
@@ -108,15 +116,17 @@ poetry run pytest --cov=src --cov-report=html
 ### Для работы с проектом требуется Python 3.10+ и менеджер зависимостей Poetry.
 
 #### 1. Клонируйте репозиторий:
+
 ```bash
 git clone https://github.com/Elix-a/Project_Bank.git
 cd Project_Bank
 ```
+
 #### 2. Установите зависимости:
 
 ```bash
 poetry install
 ```
+## Лицензия
 
-### Лицензия
-#### MIT
+MIT
