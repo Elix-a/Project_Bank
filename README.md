@@ -6,7 +6,8 @@
 - Маскировки номеров банковских счетов (формат: `**XXXX`).
 - Парсинга дат из формата ISO 8601 (`YYYY-MM-DDTHH:MM:SS.ffffff`) в формат `DD.MM.YYYY`.
 - Фильтрации и сортировки списков банковских транзакций.
-- Генерации и фильтрации данных транзакций с использованием генераторов Python.
+- Генерации и фильтрации данных транзакций.
+- Логирования вызовов функций.
 
 ## Модули
 
@@ -14,6 +15,7 @@
 - `src.widget`: Основной модуль с функциями `mask_account_card` и `get_date`.
 - `src.processing`: Модуль для обработки данных транзакций (`filter_by_state`, `sort_by_date`).
 - `src.generators`: Модуль для генерации и фильтрации данных транзакций (`filter_by_currency`, `transaction_descriptions`, `card_number_generator`).
+- `src.decorators`: Модуль для декораторов (`log`).
 
 ## Примеры использования
 
@@ -95,6 +97,34 @@ for card_number in card_number_generator(1, 3):
     print(card_number)
 ```
 
+## Логирование вызовов функций
+```python
+from src.decorators.decorators import log
+
+# Пример декорирования функции для логирования в файл
+@log(filename="function_calls.log")
+def calculate_sum(a, b):
+    return a + b
+
+# Пример декорирования функции для логирования в консоль
+@log() # filename=None по умолчанию
+def divide_numbers(x, y):
+    if y == 0:
+        raise ZeroDivisionError("Cannot divide by zero")
+    return x / y
+
+# Вызовы функций
+result1 = calculate_sum(5, 3) # Запишет "calculate_sum ok" в function_calls.log
+print(f"Sum result: {result1}")
+
+try:
+    result2 = divide_numbers(10, 0) # Запишет ошибку в stdout
+except ZeroDivisionError as e:
+    print(f"Caught error: {e}")
+
+result3 = divide_numbers(10, 2) # Запишет "divide_numbers ok" в stdout
+print(f"Division result: {result3}")
+```
 ## Тестирование
 ### Проект использует фреймворк pytest для написания и запуска тестов.
 #### Для запуска всех тестов выполните:
