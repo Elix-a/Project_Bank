@@ -1,6 +1,7 @@
 import functools
-import sys
 import os
+import sys
+
 
 def log(filename=None):
     """

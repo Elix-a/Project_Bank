@@ -7,6 +7,8 @@ package-mode = false
 
 [tool.poetry.dependencies]
 python = "^3.14"
+requests = "^2.34.2"
+python-dotenv = "^1.2.2"
 
 [tool.poetry.group.lint.dependencies]
 flake8 = "^7.1.0"
