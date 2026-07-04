@@ -1,14 +1,15 @@
 import os
-from typing import Any, Dict, Optional, Union
+from typing import Any, Dict
 
 import requests
-from dotenv import load_dotenv  # <-- Добавьте импорт
+from dotenv import load_dotenv  # <-- Убираем неиспользуемые imports и исправляем импорт
 
 # Загрузите переменные из .env файла (если он существует)
 load_dotenv()
 
 # Получаем API-ключ из переменных окружения
 API_KEY = os.getenv("EXCHANGE_RATES_API_KEY")
+
 
 def convert_to_rub(transaction: Dict[str, Any]) -> float:
     """
@@ -38,7 +39,7 @@ def convert_to_rub(transaction: Dict[str, Any]) -> float:
             "amount": amount
         }
         headers = {
-            "apikey": API_KEY # <-- Теперь API_KEY может быть загружен из .env
+            "apikey": API_KEY  # <-- API_KEY может быть загружен из .env
         }
 
         try:
