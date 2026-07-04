@@ -16,14 +16,6 @@
 - `src.processing`: Модуль для обработки данных транзакций (`filter_by_state`, `sort_by_date`).
 - `src.generators`: Модуль для генерации и фильтрации данных транзакций (`filter_by_currency`, `transaction_descriptions`, `card_number_generator`).
 - `src.decorators`: Модуль для декораторов (`log`).
-- `src.utils`: Модуль для вспомогательных функций, включая загрузку транзакций из JSON (`load_transactions_from_json`).
-- `src.external_api`: Модуль для взаимодействия с внешними API, например, для конвертации валюты (`convert_to_rub`).
-
-## зависимости
-
-Проект использует следующие дополнительные библиотеки:
-- `requests`: Для отправки HTTP-запросов к внешним API.
-- `python-dotenv`: Для загрузки переменных окружения из файла `.env`.
 
 ## Примеры использования
 
@@ -133,23 +125,6 @@ except ZeroDivisionError as e:
 result3 = divide_numbers(10, 2) # Запишет "divide_numbers ok" в stdout
 print(f"Division result: {result3}")
 ```
-
-## Логирование
-
-Проект использует библиотеку `logging` для отслеживания работы приложения.
-Логи записываются в файлы в папке `logs/`:
-- `logs/utils.log` - логи модуля `utils` (например, загрузка транзакций).
-- `logs/masks.log` - логи модуля `masks` (например, маскировка номеров).
-
-Формат логов: `%(asctime)s - %(name)s - %(levelname)s - %(message)s`.
-
-## Чтение транзакций из файлов
-
-Проект теперь поддерживает чтение транзакций из файлов формата CSV и Excel (XLSX).
-
-- `src.readers.read_transactions_from_csv(file_path)` - читает транзакции из CSV.
-- `src.readers.read_transactions_from_excel(file_path)` - читает транзакции из Excel.
-
 ## Тестирование
 ### Проект использует фреймворк pytest для написания и запуска тестов.
 #### Для запуска всех тестов выполните:
@@ -182,26 +157,6 @@ cd Project_Bank
 ```bash
 poetry install
 ```
-```bash
-2. Скопируйте файл `.env.example` в `.env` и укажите свои значения переменных (например, API-ключи).
-```
-
-## Тестирование
-
-Проект использует фреймворк `pytest` для написания и запуска тестов.
-
-Для запуска всех тестов выполните:
-```
-```bash
-poetry run pytest
-```
-
-### Для запуска тестов с отчётом о покрытии в формате HTML:
-```bash
-poetry run pytest --cov=src --cov-report=html
-```
-### Отчёт будет доступен в файле [htmlcov/index.html.]()
-
 ## Лицензия
 
 MIT

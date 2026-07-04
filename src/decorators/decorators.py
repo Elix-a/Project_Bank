@@ -1,6 +1,6 @@
+# src/decorators/decorators.py
+
 import functools
-import os
-import sys
 
 
 def log(filename=None):
@@ -19,24 +19,22 @@ def log(filename=None):
         def wrapper(*args, **kwargs):
             # Формируем строку с аргументами
             # Для кортежа с одним элементом repr даст (x,) - с запятой
-            # Мы хотим получить строку, как если бы аргументы были переданы в print или f-строку
-            # repr от аргумента, join через ', '
-            # Если аргумент один, repr даст x, но нам нужен x, (для кортежа с одним элементом)
-            args_repr = [repr(arg) for arg in args]
-            kwargs_str = ', '.join(f"{k}={repr(v)}" for k, v in kwargs.items())
-
-            # Собираем общую строку аргументов
-            all_args_parts = []
+            # Мы хотим получить строку, как если бы это был кортеж
+            args_repr = tuple(repr(arg) for arg in args)
+            kwargs_str = ", ".join(f"{k}={repr(v)}" for k, v in kwargs.items())
+            all_args_str_parts = []
             if args_repr:
-                # Обрабатываем позиционные аргументы
-                args_part = ', '.join(args_repr)
-                # Если только один позиционный аргумент, добавляем запятую, чтобы показать, что это кортеж
-                if len(args) == 1:
-                    args_part += ","
-                all_args_parts.append(args_part)
+                # Если есть позиционные аргументы, создаем строку, как если бы это был кортеж
+                # repr от кортежа (x, y, z) -> '(x, y, z)'
+                # repr от кортежа (x,) -> "(x,)"
+                # repr от кортежа () -> "()"
+                args_tuple_str = repr(args_repr)
+                # Убираем внешние скобки ()
+                args_str = args_tuple_str[1:-1]  # срез убирает первую '(' и последнюю ')'
+                all_args_str_parts.append(args_str)
             if kwargs_str:
-                all_args_parts.append(kwargs_str)
-            all_args_str = ', '.join(all_args_parts)
+                all_args_str_parts.append(kwargs_str)
+            all_args_str = ", ".join(all_args_str_parts)
 
             try:
                 # Вызываем оригинальную функцию
@@ -46,10 +44,10 @@ def log(filename=None):
 
                 # Выводим сообщение в файл или stdout
                 if filename:
-                    with open(filename, 'a', encoding='utf-8') as f:
+                    with open(filename, "a", encoding="utf-8") as f:
                         f.write(message)
                 else:
-                    print(message, end='') # end='', чтобы не добавлять лишнюю новую строку, так как message уже содержит \n
+                    print(message, end="")  # end="", чтобы не добавлять лишнюю новую строку
 
                 # Возвращаем результат оригинальной функции
                 return result
@@ -58,14 +56,22 @@ def log(filename=None):
                 # Формируем сообщение об ошибке
                 error_type = type(e).__name__
                 # Используем all_args_str в сообщении об ошибке
-                message = f"{func.__name__} error: {error_type}. Inputs: ({all_args_str})\n"
+                # Исправлено: разбита длинная строка, чтобы не превышать 119 символов
+                # Подготовим части сообщения на отдельных строках, чтобы не превысить 119 символов
+                # Используем .format() для вставки потенциально длинных значений
+                fn_name = func.__name__
+                # Собираем сообщение напрямую, используя короткие имена и короткий шаблон
+                # Шаблон разбит на части, но собран в .format() строкой, которая не превышает 119 символов
+                # Это должно избежать ошибки E501
+                msg_parts = ["{n} error: {et}. Inputs: ({a})\n"]
+                message = "".join(msg_parts).format(n=fn_name, et=error_type, a=all_args_str)
 
                 # Выводим сообщение об ошибке в файл или stdout
                 if filename:
-                    with open(filename, 'a', encoding='utf-8') as f:
+                    with open(filename, "a", encoding="utf-8") as f:
                         f.write(message)
                 else:
-                    print(message, end='') # end='', чтобы не добавлять лишнюю новую строку
+                    print(message, end="")  # end="", чтобы не добавлять лишнюю новую строку
 
                 # Повторно вызываем исключение, чтобы оно не гасилось
                 raise
