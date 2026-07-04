@@ -1,9 +1,9 @@
-import re # Импортируем модуль для работы с регулярными выражениями
-
+import re  # Импортируем модуль для работы с регулярными выражениями
 from datetime import datetime
+
 # Импортируем функции маскировки из masks.py
 # Убедитесь, что файл src/masks.py существует и содержит эти функции
-from src.masks import get_mask_card_number, get_mask_account
+from src.masks import get_mask_account, get_mask_card_number
 
 
 def get_mask_card_number(card_number: str) -> str:
