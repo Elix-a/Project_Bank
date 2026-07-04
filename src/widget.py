@@ -1,40 +1,38 @@
-from datetime import datetime
+from src.masks import get_mask_card_number, get_mask_account  # Исправлен импорт из текущего пакета
 
 
-def get_mask_card_number(card_number: str) -> str:
-    """Возвращает маску номера карты в формате XXXX XX** **** XXXX."""
-    return f"{card_number[:4]} {card_number[4:6]}** **** {card_number[-4:]}"
-
-
-def get_mask_account(account_number: str) -> str:
-    """Возвращает маску номера счёта в формате **XXXX."""
-    return f"**{account_number[-4:]}"
-
-
-def mask_account_card(input_string: str) -> str:
-    """
-    Обрабатывает строку с информацией о карте или счете.
-    Возвращает замаскированный номер.
-    """
+def mask_account_card(input_string):
+    """Функция для маскировки номера карты или счета."""
+    # Разделяем строку на части (название и номер)
     parts = input_string.split()
-    if len(parts) != 2:
-        raise ValueError("Некорректный ввод: строка должна содержать ровно два элемента — тип и номер.")
+    if not parts:
+        return ""  # Если строка пуста, возвращаем пустую строку
 
-    type_, number = parts
+    # Извлекаем номер (предполагается, что он последний)
+    number = parts[-1]
 
-    if "Счет" in type_:
-        return f"{type_} {get_mask_account(number)}"
+    # Определяем, является ли это номером карты (16 цифр) или счета (20 цифр)
+    if len(number) == 16 and number.isdigit():
+        # Это карта
+        masked_number = get_mask_card_number(int(number))
+        # Возвращаем строку с заменённым номером
+        return " ".join(parts[:-1]) + " " + masked_number
+    elif len(number) == 20 and number.isdigit():
+        # Это счёт
+        masked_number = get_mask_account(int(number))
+        # Возвращаем строку с заменённым номером
+        return " ".join(parts[:-1]) + " " + masked_number
     else:
-        return f"{type_} {get_mask_card_number(number)}"
+        # Если номер не подходит ни под одно условие, возвращаем как есть
+        return input_string
 
 
-def get_date(iso_date: str) -> str:
-    """
-    Преобразует строку с датой в формате ISO 8601
-    в строку формата ДД.ММ.ГГГГ.
-    """
-    try:
-        date_obj = datetime.fromisoformat(iso_date.replace("T", " "))
-        return date_obj.strftime("%d.%m.%Y")
-    except ValueError:
-        raise ValueError("Некорректный формат даты.")
+def get_date(date_string):
+    """Функция для преобразования строки даты в формат DD.MM.YYYY."""
+    # Импортируем datetime внутри функции
+    from datetime import datetime
+
+    # Преобразуем строку в объект datetime, указав формат
+    date_object = datetime.fromisoformat(date_string.replace("Z", "+00:00"))
+    # Форматируем объект datetime в строку нужного формата
+    return date_object.strftime("%d.%m.%Y")
