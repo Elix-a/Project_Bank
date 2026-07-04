@@ -16,6 +16,14 @@
 - `src.processing`: Модуль для обработки данных транзакций (`filter_by_state`, `sort_by_date`).
 - `src.generators`: Модуль для генерации и фильтрации данных транзакций (`filter_by_currency`, `transaction_descriptions`, `card_number_generator`).
 - `src.decorators`: Модуль для декораторов (`log`).
+- `src.utils`: Модуль для вспомогательных функций, включая загрузку транзакций из JSON (`load_transactions_from_json`).
+- `src.external_api`: Модуль для взаимодействия с внешними API, например, для конвертации валюты (`convert_to_rub`).
+
+## зависимости
+
+Проект использует следующие дополнительные библиотеки:
+- `requests`: Для отправки HTTP-запросов к внешним API.
+- `python-dotenv`: Для загрузки переменных окружения из файла `.env`.
 
 ## Примеры использования
 
@@ -157,6 +165,10 @@ cd Project_Bank
 ```bash
 poetry install
 ```
+```bash
+2. Скопируйте файл `.env.example` в `.env` и укажите свои значения переменных (например, API-ключи).
+```
+
 ## Лицензия
 
 MIT
