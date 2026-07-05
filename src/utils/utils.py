@@ -1,5 +1,21 @@
 import json
-from typing import Any, Dict, List
+import logging
+from typing import List, Dict, Any
+
+# --- Настройка логирования для модуля utils ---
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG)
+
+# Создаём обработчик для файла
+file_handler = logging.FileHandler('logs/utils.log', mode='w', encoding='utf-8')
+file_handler.setLevel(logging.DEBUG)
+
+# Создаём форматтер
+formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+file_handler.setFormatter(formatter)
+
+# Добавляем обработчик к логеру
+logger.addHandler(file_handler)
 
 
 def load_transactions_from_json(file_path: str) -> List[Dict[str, Any]]:
@@ -18,9 +34,17 @@ def load_transactions_from_json(file_path: str) -> List[Dict[str, Any]]:
             data = json.load(f)
             # Проверяем, что данные — это список
             if isinstance(data, list):
+                logger.info(f"Успешно загружено {len(data)} транзакций из {file_path}")
                 return data
             else:
+                logger.warning(f"Файл {file_path} содержит не список, возвращаем пустой список.")
                 return []
-    except (FileNotFoundError, json.JSONDecodeError, OSError):
-        # Если файл не найден, поврежден или не может быть прочитан, возвращаем пустой список
+    except FileNotFoundError:
+        logger.error(f"Файл {file_path} не найден.", exc_info=True)
+        return []
+    except json.JSONDecodeError:
+        logger.error(f"Файл {file_path} содержит некорректный JSON.", exc_info=True)
+        return []
+    except OSError as e:
+        logger.error(f"Ошибка доступа к файлу {file_path}: {e}", exc_info=True)
         return []

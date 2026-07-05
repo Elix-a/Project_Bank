@@ -125,6 +125,17 @@ except ZeroDivisionError as e:
 result3 = divide_numbers(10, 2) # Запишет "divide_numbers ok" в stdout
 print(f"Division result: {result3}")
 ```
+
+## Логирование
+
+Проект использует библиотеку `logging` для отслеживания работы приложения.
+Логи записываются в файлы в папке `logs/`:
+- `logs/utils.log` - логи модуля `utils` (например, загрузка транзакций).
+- `logs/masks.log` - логи модуля `masks` (например, маскировка номеров).
+
+Формат логов: `%(asctime)s - %(name)s - %(levelname)s - %(message)s`.
+
+
 ## Тестирование
 ### Проект использует фреймворк pytest для написания и запуска тестов.
 #### Для запуска всех тестов выполните:
