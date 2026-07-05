@@ -1,4 +1,4 @@
-from src.masks import get_mask_card_number, get_mask_account  # Исправлен импорт из текущего пакета
+from src.masks import get_mask_account, get_mask_card_number  # Исправлен импорт из текущего пакета
 
 
 def mask_account_card(input_string):

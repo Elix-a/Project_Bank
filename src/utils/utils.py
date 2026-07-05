@@ -1,8 +1,12 @@
 import json
 import logging
-from typing import List, Dict, Any
+import os
+from typing import Any, Dict, List
 
 # --- Настройка логирования для модуля utils ---
+# Создаём папку logs, если её нет
+os.makedirs("logs", exist_ok=True)
+
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 

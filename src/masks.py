@@ -1,6 +1,10 @@
 import logging
+import os
 
 # --- Настройка логирования для модуля masks ---
+# Создаём папку logs, если её нет
+os.makedirs("logs", exist_ok=True)
+
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 
@@ -29,8 +33,7 @@ def get_mask_card_number(card_number: int) -> str:
     card_number_str = str(card_number)
     if len(card_number_str) != 16:
         logger.error(f"Неверная длина номера карты: {len(card_number_str)}. Ожидается 16.")
-        # Возвращаем исходный номер или пустую строку, или вызываем исключение - зависит от требований
-        # Пока просто вернем пустую строку и залогируем ошибку
+        # Возвращаем пустую строку при ошибке
         return ""
 
     # Маскировка: первые 6 и последние 4 цифры видны, остальные заменяются на *
@@ -52,7 +55,7 @@ def get_mask_account(account_number: int) -> str:
     account_number_str = str(account_number)
     if len(account_number_str) != 20:
         logger.error(f"Неверная длина номера счёта: {len(account_number_str)}. Ожидается 20.")
-        # Аналогично, возвращаем пустую строку при ошибке
+        # Возвращаем пустую строку при ошибке
         return ""
 
     # Маскировка: последние 4 цифры видны, остальные заменяются на **
