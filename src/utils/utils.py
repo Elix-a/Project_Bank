@@ -11,11 +11,11 @@ logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
 
 # Создаём обработчик для файла
-file_handler = logging.FileHandler('logs/utils.log', mode='w', encoding='utf-8')
+file_handler = logging.FileHandler("logs/utils.log", mode="w", encoding="utf-8")
 file_handler.setLevel(logging.DEBUG)
 
 # Создаём форматтер
-formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
 file_handler.setFormatter(formatter)
 
 # Добавляем обработчик к логеру
@@ -34,7 +34,7 @@ def load_transactions_from_json(file_path: str) -> List[Dict[str, Any]]:
         Если файл не найден, пустой или содержит не список, возвращается пустой список.
     """
     try:
-        with open(file_path, 'r', encoding='utf-8') as f:
+        with open(file_path, "r", encoding="utf-8") as f:
             data = json.load(f)
             # Проверяем, что данные — это список
             if isinstance(data, list):

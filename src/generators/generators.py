@@ -7,9 +7,7 @@ def filter_by_currency(transactions, currency_code):
     """Фильтрует список транзакций по заданному коду валюты."""
     for transaction in transactions:
         # Проверяем, существует ли 'operationAmount' и 'currency', и совпадает ли код
-        if (
-            transaction.get("operationAmount", {}).get("currency", {}).get("code") == currency_code
-        ):
+        if transaction.get("operationAmount", {}).get("currency", {}).get("code") == currency_code:
             yield transaction
 
 
@@ -30,7 +28,5 @@ def card_number_generator(start, stop):
         # Форматируем число, добавляя ведущие нули до 16 цифр
         formatted_number = f"{number:016d}"
         # Разбиваем на группы по 4 цифры
-        chunked_number = " ".join(
-            [formatted_number[i:i + 4] for i in range(0, len(formatted_number), 4)]
-        )
+        chunked_number = " ".join([formatted_number[i : i + 4] for i in range(0, len(formatted_number), 4)])
         yield chunked_number

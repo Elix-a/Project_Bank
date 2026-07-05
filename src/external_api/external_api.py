@@ -33,14 +33,8 @@ def convert_to_rub(transaction: Dict[str, Any]) -> float:
     # Для USD и EUR делаем запрос к API
     if currency in ("USD", "EUR"):
         url = "https://api.apilayer.com/exchangerates_data/convert"
-        params = {
-            "from": currency,
-            "to": "RUB",
-            "amount": amount
-        }
-        headers = {
-            "apikey": API_KEY  # <-- API_KEY может быть загружен из .env
-        }
+        params = {"from": currency, "to": "RUB", "amount": amount}
+        headers = {"apikey": API_KEY}  # <-- API_KEY может быть загружен из .env
 
         try:
             response = requests.get(url, headers=headers, params=params, timeout=5)

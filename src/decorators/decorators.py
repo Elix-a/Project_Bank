@@ -13,6 +13,7 @@ def log(filename=None):
     Returns:
         callable: Декоратор, оборачивающий функцию.
     """
+
     def decorator(func):
         # Сохраняем метаданные оригинальной функции
         @functools.wraps(func)
@@ -77,4 +78,5 @@ def log(filename=None):
                 raise
 
         return wrapper
+
     return decorator
