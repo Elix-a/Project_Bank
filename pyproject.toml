@@ -7,12 +7,25 @@ package-mode = false
 
 [tool.poetry.dependencies]
 python = "^3.14"
+requests = "^2.34.2"
+python-dotenv = "^1.2.2"
+pandas = "^3.0.3"
+pandas-stubs = "~=3.0.3"
+openpyxl = "^3.1.5"
 
 [tool.poetry.group.lint.dependencies]
 flake8 = "^7.1.0"
 black = "^24.4.0"
 isort = "^5.13.0"
 mypy = "^1.10.0"
+
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^9.0.3"
+pytest-cov = "^7.1.0"
+autoflake = "^2.3.3"
+autotyping = "^24.9.0"
+no-implicit-optional = "^1.4"
 
 [build-system]
 requires = ["poetry-core"]
