@@ -1,82 +1,66 @@
 # src/decorators/decorators.py
 
 import functools
+from typing import Any, Callable
 
 
-def log(filename=None):
+def log(func: Callable | None = None, *, filename: str | None = None) -> Any:
     """
-    Декоратор для логирования вызовов функций.
+    Декоратор, который логирует результат выполнения функции.
+    При успешном завершении выводит "<имя_функции> ok".
+    При ошибке выводит "<имя_функции> error: <тип_ошибки>. Inputs: <аргументы>."
+    В сообщение об ошибке также включается её текст (str(e)).
 
-    Args:
-        filename (str, optional): Имя файла для логирования. Если None, логируется в stdout.
-
-    Returns:
-        callable: Декоратор, оборачивающий функцию.
+    Если filename передан, лог записывается в файл в режиме добавления.
+    Если filename равен None, лог выводится в stdout.
+    Если filename = "" или указывает на несуществующую директорию – OSError.
     """
 
-    def decorator(func):
-        # Сохраняем метаданные оригинальной функции
-        @functools.wraps(func)
-        def wrapper(*args, **kwargs):
-            # Формируем строку с аргументами
-            # Для кортежа с одним элементом repr даст (x,) - с запятой
-            # Мы хотим получить строку, как если бы это был кортеж
-            args_repr = tuple(repr(arg) for arg in args)
-            kwargs_str = ", ".join(f"{k}={repr(v)}" for k, v in kwargs.items())
-            all_args_str_parts = []
-            if args_repr:
-                # Если есть позиционные аргументы, создаем строку, как если бы это был кортеж
-                # repr от кортежа (x, y, z) -> '(x, y, z)'
-                # repr от кортежа (x,) -> "(x,)"
-                # repr от кортежа () -> "()"
-                args_tuple_str = repr(args_repr)
-                # Убираем внешние скобки ()
-                args_str = args_tuple_str[1:-1]  # срез убирает первую '(' и последнюю ')'
-                all_args_str_parts.append(args_str)
-            if kwargs_str:
-                all_args_str_parts.append(kwargs_str)
-            all_args_str = ", ".join(all_args_str_parts)
-
+    def decorator(f: Callable) -> Callable:
+        @functools.wraps(f)
+        def wrapper(*args: Any, **kwargs: Any) -> Any:
             try:
-                # Вызываем оригинальную функцию
-                result = func(*args, **kwargs)
-                # Формируем сообщение об успехе
-                message = f"{func.__name__} ok\n"
-
-                # Выводим сообщение в файл или stdout
-                if filename:
-                    with open(filename, "a", encoding="utf-8") as f:
-                        f.write(message)
-                else:
-                    print(message, end="")  # end="", чтобы не добавлять лишнюю новую строку
-
-                # Возвращаем результат оригинальной функции
+                result = f(*args, **kwargs)
+                msg = f"{f.__name__} ok"
+                _write_log(msg, filename)
                 return result
-
             except Exception as e:
-                # Формируем сообщение об ошибке
-                error_type = type(e).__name__
-                # Используем all_args_str в сообщении об ошибке
-                # Исправлено: разбита длинная строка, чтобы не превышать 119 символов
-                # Подготовим части сообщения на отдельных строках, чтобы не превысить 119 символов
-                # Используем .format() для вставки потенциально длинных значений
-                fn_name = func.__name__
-                # Собираем сообщение напрямую, используя короткие имена и короткий шаблон
-                # Шаблон разбит на части, но собран в .format() строкой, которая не превышает 119 символов
-                # Это должно избежать ошибки E501
-                msg_parts = ["{n} error: {et}. Inputs: ({a})\n"]
-                message = "".join(msg_parts).format(n=fn_name, et=error_type, a=all_args_str)
+                # Формируем представление аргументов
+                arg_reprs = [f"'{a}'" for a in args]  # все позиционные – в кавычках
+                kwarg_reprs = [f"{k}='{v}'" for k, v in kwargs.items()]
+                all_parts = arg_reprs + kwarg_reprs
 
-                # Выводим сообщение об ошибке в файл или stdout
-                if filename:
-                    with open(filename, "a", encoding="utf-8") as f:
-                        f.write(message)
+                # Кортеж: для одного элемента добавляем запятую
+                if len(all_parts) == 0:
+                    inputs_str = "()"
+                elif len(all_parts) == 1:
+                    inputs_str = f"({all_parts[0]},)"
                 else:
-                    print(message, end="")  # end="", чтобы не добавлять лишнюю новую строку
+                    inputs_str = "(" + ", ".join(all_parts) + ")"
 
-                # Повторно вызываем исключение, чтобы оно не гасилось
+                error_type = type(e).__name__
+                error_text = str(e)  # текст ошибки
+                msg = (
+                    f"{f.__name__} error: {error_type}. "
+                    f"Inputs: {inputs_str}."
+                    f" Message: {error_text}"  # добавляем сообщение ошибки
+                )
+                _write_log(msg, filename)
                 raise
 
         return wrapper
 
-    return decorator
+    # Поддержка @log, @log() и @log(filename=...)
+    if func is None:
+        return decorator
+    else:
+        return decorator(func)
+
+
+def _write_log(message: str, filename: str | None) -> None:
+    """Запись сообщения в файл или stdout."""
+    if filename is not None:
+        with open(filename, "a", encoding="utf-8") as f:
+            f.write(message + "\n")
+    else:
+        print(message)

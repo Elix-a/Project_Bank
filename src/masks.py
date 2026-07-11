@@ -18,6 +18,7 @@ file_handler.setFormatter(formatter)
 
 # Добавляем обработчик к логеру
 logger.addHandler(file_handler)
+# ------------------------------
 
 
 def get_mask_card_number(card_number: int) -> str:
@@ -28,7 +29,7 @@ def get_mask_card_number(card_number: int) -> str:
         card_number: Номер карты в виде целого числа.
 
     Returns:
-        str: Маскированный номер карты.
+        str: Маскированный номер карты. Возвращает пустую строку при неправильной длине.
     """
     card_number_str = str(card_number)
     if len(card_number_str) != 16:
@@ -50,7 +51,7 @@ def get_mask_account(account_number: int) -> str:
         account_number: Номер счёта в виде целого числа.
 
     Returns:
-        str: Маскированный номер счёта.
+        str: Маскированный номер счёта. Возвращает пустую строку при неправильной длине.
     """
     account_number_str = str(account_number)
     if len(account_number_str) != 20:

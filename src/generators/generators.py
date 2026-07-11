@@ -1,32 +1,56 @@
 # src/generators/generators.py
 
-import random
+from typing import Any, Dict, Iterator, List
 
 
-def filter_by_currency(transactions, currency_code):
-    """Фильтрует список транзакций по заданному коду валюты."""
+def card_number_generator(start: int, end: int) -> Iterator[str]:
+    """
+    Генерирует номера банковских карт в заданном диапазоне.
+
+    Args:
+        start (int): Начальный номер (включительно).
+        end (int): Конечный номер (включительно).
+
+    Yields:
+        str: Следующий номер карты в формате XXXX XXXX XXXX XXXX.
+    """
+    for number in range(start, end + 1):
+        # Форматирование: 16-значное число с ведущими нулями, разбитое на 4 группы по 4 цифры
+        formatted_number = f"{number:016d}"  # Форматируем как 16-значное число с ведущими нулями
+        yield f"{formatted_number[:4]} {formatted_number[4:8]} {formatted_number[8:12]} {formatted_number[12:16]}"
+
+
+def filter_by_currency(transactions: List[Dict[str, Any]], currency_code: str) -> Iterator[Dict[str, Any]]:
+    """
+    Фильтрует транзакции по заданному коду валюты.
+
+    Args:
+        transactions (List[Dict[str, Any]]): Список транзакций.
+        currency_code (str): Код валюты для фильтрации (например, 'USD', 'EUR').
+
+    Yields:
+        Dict[str, Any]: Транзакция, у которой 'currency_code' совпадает с заданным.
+    """
     for transaction in transactions:
-        # Проверяем, существует ли 'operationAmount' и 'currency', и совпадает ли код
-        if transaction.get("operationAmount", {}).get("currency", {}).get("code") == currency_code:
+        # Предполагаем, что в транзакции есть ключ 'operationAmount' или 'currency_code'
+        # Сначала пробуем 'operationAmount'
+        op_amount = transaction.get("operationAmount", {})
+        if op_amount.get("currency", {}).get("code") == currency_code:
+            yield transaction
+        # Если не нашли в operationAmount, пробуем напрямую в транзакции
+        elif transaction.get("currency_code") == currency_code:
             yield transaction
 
 
-def transaction_descriptions(transactions):
-    """Генерирует описания транзакций."""
+def transaction_descriptions(transactions: List[Dict[str, Any]]) -> Iterator[str]:
+    """
+    Извлекает описания транзакций.
+
+    Args:
+        transactions (List[Dict[str, Any]]): Список транзакций.
+
+    Yields:
+        str: Описание транзакции.
+    """
     for transaction in transactions:
-        # Получаем описание, возвращаем 'No Description', если ключ отсутствует
-        description = transaction.get("description", "No Description")
-        yield description
-
-
-def card_number_generator(start, stop):
-    """Генерирует номера банковских карт в формате XXXX XXXX XXXX XXXX."""
-    # Используем random.randint для генерации случайного числа в диапазоне
-    for _ in range(start, stop + 1):  # Включаем stop в диапазон
-        # Генерируем 16-значное число
-        number = random.randint(0, 9999999999999999)
-        # Форматируем число, добавляя ведущие нули до 16 цифр
-        formatted_number = f"{number:016d}"
-        # Разбиваем на группы по 4 цифры
-        chunked_number = " ".join([formatted_number[i : i + 4] for i in range(0, len(formatted_number), 4)])
-        yield chunked_number
+        yield transaction.get("description", "")  # Возвращаем описание или пустую строку, если ключ отсутствует

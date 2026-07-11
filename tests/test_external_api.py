@@ -1,14 +1,18 @@
-from unittest.mock import patch
-from src.external_api.external_api import convert_to_rub
+# tests/test_external_api.py
+
+# import pytest # <-- F401: Удалить, если не используется в этом файле
+from unittest.mock import patch  # <-- Импортируем patch
+
+from src.external_api.external_api import convert_to_rub  # <-- Импортируем тестируемую функцию
 
 
-def test_convert_to_rub_rub():
+def test_convert_to_rub_rub() -> None:  # <-- Добавить -> None
     """Тест конвертации из RUB в RUB."""
     transaction = {"amount": 100.0, "currency": "RUB"}
     assert convert_to_rub(transaction) == 100.0
 
 
-def test_convert_to_rub_usd_success():
+def test_convert_to_rub_usd_success() -> None:  # <-- Добавить -> None
     """Тест успешной конвертации из USD в RUB с моком API."""
     transaction = {"amount": 1.0, "currency": "USD"}
 
@@ -22,7 +26,7 @@ def test_convert_to_rub_usd_success():
 
     # Создаем Mock для requests.get, который возвращает наш mock_response
     with patch("src.external_api.external_api.requests.get") as mock_get:
-        mock_get.return_value = mock_response  # <-- E261: два пробела перед комментарием
+        mock_get.return_value = mock_response
 
         result = convert_to_rub(transaction)
         assert result == 95.0
@@ -30,7 +34,7 @@ def test_convert_to_rub_usd_success():
         mock_get.assert_called_once()
 
 
-def test_convert_to_rub_eur_success():
+def test_convert_to_rub_eur_success() -> None:  # <-- Добавить -> None
     """Тест успешной конвертации из EUR в RUB с моком API."""
     transaction = {"amount": 1.0, "currency": "EUR"}
 
@@ -41,21 +45,21 @@ def test_convert_to_rub_eur_success():
     )()
 
     with patch("src.external_api.external_api.requests.get") as mock_get:
-        mock_get.return_value = mock_response  # <-- E261: два пробела перед комментарием
+        mock_get.return_value = mock_response  # <-- E262: два пробела перед комментарием
 
         result = convert_to_rub(transaction)
         assert result == 105.0
         mock_get.assert_called_once()
 
 
-def test_convert_to_rub_api_error():
+def test_convert_to_rub_api_error() -> None:  # <-- Добавить -> None
     """Тест обработки ошибки API (например, сеть недоступна)."""
     transaction = {"amount": 100.0, "currency": "USD"}
 
-    # Мокаем requests.get, чтобы он бросал исключение из семейства requests.exceptions
+    # Мокаем requests.get, чтобы он бросал исключение ConnectionError
     # Это исключение convert_to_rub умеет перехватывать.
-    with patch("src.external_api.external_api.requests.get", side_effect=Exception("Network error")):
+    with patch("src.external_api.external_api.requests.get", side_effect=ConnectionError("Network error")):
         result = convert_to_rub(transaction)
         # При ошибке, вызванной библиотекой requests (или её подклассами),
         # convert_to_rub должен вернуть исходную сумму.
-        assert result == 100.0
+        assert result == 100.0  # <-- Проверяем возврат исходной суммы

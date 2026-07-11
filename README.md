@@ -135,6 +135,12 @@ print(f"Division result: {result3}")
 
 Формат логов: `%(asctime)s - %(name)s - %(levelname)s - %(message)s`.
 
+## Чтение транзакций из файлов
+
+Проект теперь поддерживает чтение транзакций из файлов формата CSV и Excel (XLSX).
+
+- `src.readers.read_transactions_from_csv(file_path)` - читает транзакции из CSV.
+- `src.readers.read_transactions_from_excel(file_path)` - читает транзакции из Excel.
 
 ## Тестирование
 ### Проект использует фреймворк pytest для написания и запуска тестов.

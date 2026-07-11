@@ -1,50 +1,53 @@
-import os
-from typing import Any, Dict
+# src/external_api/external_api.py
 
 import requests
-from dotenv import load_dotenv  # <-- Убираем неиспользуемые imports и исправляем импорт
 
-# Загрузите переменные из .env файла (если он существует)
-load_dotenv()
-
-# Получаем API-ключ из переменных окружения
-API_KEY = os.getenv("EXCHANGE_RATES_API_KEY")
+# API Key for exchangerate.host (заменён API Apilayer)
+API_KEY = "pin23uLFWYL1FY9S10330AuVlHq89ip9"
 
 
-def convert_to_rub(transaction: Dict[str, Any]) -> float:
+def convert_to_rub(transaction: dict) -> float:
     """
-    Конвертирует сумму транзакции в рубли.
+    Конвертирует сумму транзакции в рубли по курсу ЦБ РФ через exchangerate.host.
 
     Args:
-        transaction (Dict[str, Any]): Словарь с данными о транзакции.
-            Должен содержать ключи 'amount' (float) и 'currency' (str).
+        transaction (dict): Словарь с информацией о транзакции.
+                            Ожидается ключ 'amount' (сумма) и 'currency' (код валюты).
 
     Returns:
-        float: Сумма транзакции в рублях.
-        Если валюта не USD/EUR, возвращается исходная сумма.
+        float: Сумма в рублях. Если валюта RUB, возвращает исходную сумму.
+               Если конвертация не удалась, возвращает исходную сумму.
     """
     amount = transaction.get("amount", 0.0)
-    currency = transaction.get("currency", "").upper()
+    currency = transaction.get("currency", "")
 
-    # Если валюта уже RUB, возвращаем сумму как есть
     if currency == "RUB":
         return float(amount)
 
-    # Для USD и EUR делаем запрос к API
-    if currency in ("USD", "EUR"):
-        url = "https://api.apilayer.com/exchangerates_data/convert"
-        params = {"from": currency, "to": "RUB", "amount": amount}
-        headers = {"apikey": API_KEY}  # <-- API_KEY может быть загружен из .env
+    # Ссылка на API exchangerate.host
+    url = "https://api.exchangerate.host/convert"
+    params = {"from": currency, "to": "RUB", "amount": amount}
+    headers = {"apikey": API_KEY}
 
-        try:
-            response = requests.get(url, headers=headers, params=params, timeout=5)
-            response.raise_for_status()  # Вызовет исключение при 4xx/5xx
-            data = response.json()
-            # Извлекаем результат конвертации
-            return float(data.get("result", amount))
-        except (requests.exceptions.RequestException, KeyError, ValueError, TypeError):
-            # При любой ошибке (сеть, API, парсинг) возвращаем исходную сумму
+    try:
+        # Разбиваем длинный вызов на несколько строк
+        response = requests.get(url, headers=headers, params=params, timeout=5)
+        response.raise_for_status()  # Проверяем статус ответа
+
+        response_data = response.json()
+        converted_amount = response_data.get("result")
+
+        if converted_amount is not None:
+            return float(converted_amount)
+        else:
+            # Если в ответе нет 'result', возвращаем исходную сумму
             return float(amount)
 
-    # Для всех остальных валют возвращаем исходную сумму
-    return float(amount)
+    except (requests.RequestException, ConnectionError):
+        # Ловим все исключения, связанные с запросами (сетевые, таймаут и т.д.) и ConnectionError
+        # и возвращаем исходную сумму
+        return float(amount)
+    except (ValueError, KeyError):
+        # Ловим ошибки при парсинге JSON или отсутствии ключей
+        # и возвращаем исходную сумму
+        return float(amount)

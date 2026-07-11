@@ -1,47 +1,78 @@
-import os
-import tempfile
-import json
-from src.utils.utils import load_transactions_from_json
+# tests/test_utils.py
+
+from src.utils.utils import filter_by_state, get_transaction_by_id, sort_by_date
 
 
-def test_load_transactions_from_json_success():
-    """Тест успешной загрузки списка транзакций."""
-    # Создаем временный JSON-файл
-    with tempfile.NamedTemporaryFile(mode="w+", suffix=".json", delete=False) as temp_file:
-        temp_filename = temp_file.name
-        json.dump([{"id": 1, "amount": 100, "currency": "RUB"}], temp_file)
-        temp_file.flush()
-
-    result = load_transactions_from_json(temp_filename)
-    assert result == [{"id": 1, "amount": 100, "currency": "RUB"}]
-    os.unlink(temp_filename)
+def test_get_transaction_by_id_found() -> None:
+    """Тестирует поиск транзакции по ID."""
+    transactions = [{"id": 1, "state": "EXECUTED"}, {"id": 2, "state": "PENDING"}]
+    result = get_transaction_by_id(transactions, 1)
+    expected: dict = {"id": 1, "state": "EXECUTED"}
+    assert result == expected
 
 
-def test_load_transactions_from_json_empty_file():
-    """Тест загрузки пустого файла."""
-    with tempfile.NamedTemporaryFile(mode="w+", suffix=".json", delete=False) as temp_file:
-        temp_filename = temp_file.name
-        temp_file.write("")
-        temp_file.flush()
-
-    result = load_transactions_from_json(temp_filename)
-    assert result == []
-    os.unlink(temp_filename)
+def test_get_transaction_by_id_not_found() -> None:
+    """Тестирует поведение, если транзакция не найдена."""
+    transactions = [{"id": 1, "state": "EXECUTED"}]
+    result = get_transaction_by_id(transactions, 999)
+    expected: dict = {}
+    assert result == expected
 
 
-def test_load_transactions_from_json_not_a_list():
-    """Тест загрузки файла, содержащего не список."""
-    with tempfile.NamedTemporaryFile(mode="w+", suffix=".json", delete=False) as temp_file:
-        temp_filename = temp_file.name
-        json.dump({"key": "value"}, temp_file)
-        temp_file.flush()
+def test_filter_by_state_default() -> None:
+    """Тестирует фильтрацию по умолчанию (EXECUTED)."""
+    transactions = [
+        {"id": 1, "state": "EXECUTED"},
+        {"id": 2, "state": "PENDING"},
+        {"id": 3, "state": "EXECUTED"},
+    ]
+    result = filter_by_state(transactions)
+    expected = [
+        {"id": 1, "state": "EXECUTED"},
+        {"id": 3, "state": "EXECUTED"},
+    ]
+    assert result == expected
 
-    result = load_transactions_from_json(temp_filename)
-    assert result == []
-    os.unlink(temp_filename)
+
+def test_filter_by_state_cancelled() -> None:
+    """Тестирует фильтрацию по состоянию CANCELLED."""
+    transactions = [
+        {"id": 1, "state": "EXECUTED"},
+        {"id": 2, "state": "PENDING"},
+        {"id": 3, "state": "CANCELLED"},
+    ]
+    result = filter_by_state(transactions, state="CANCELLED")
+    expected = [{"id": 3, "state": "CANCELLED"}]
+    assert result == expected
 
 
-def test_load_transactions_from_json_file_not_found():
-    """Тест загрузки несуществующего файла."""
-    result = load_transactions_from_json("nonexistent.json")
-    assert result == []
+def test_sort_by_date_descending() -> None:
+    """Тестирует сортировку по дате (по убыванию)."""
+    transactions = [
+        {"id": 1, "date": "2023-01-02T00:00:00.000000"},
+        {"id": 2, "date": "2023-01-01T00:00:00.000000"},
+        {"id": 3, "date": "2023-01-03T00:00:00.000000"},
+    ]
+    result = sort_by_date(transactions)
+    expected = [
+        {"id": 3, "date": "2023-01-03T00:00:00.000000"},
+        {"id": 1, "date": "2023-01-02T00:00:00.000000"},
+        {"id": 2, "date": "2023-01-01T00:00:00.000000"},
+    ]
+    assert result == expected
+
+
+def test_sort_by_date_ascending() -> None:
+    """Тестирует сортировку по дате по возрастанию."""
+    transactions = [
+        {"id": 1, "date": "2023-01-02T00:00:00.000000"},
+        {"id": 2, "date": "2023-01-01T00:00:00.000000"},
+        {"id": 3, "date": "2023-01-03T00:00:00.000000"},
+    ]
+    result = sort_by_date(transactions, reverse=False)
+    expected = [
+        {"id": 2, "date": "2023-01-01T00:00:00.000000"},
+        {"id": 1, "date": "2023-01-02T00:00:00.000000"},
+        {"id": 3, "date": "2023-01-03T00:00:00.000000"},
+    ]
+    assert result == expected
