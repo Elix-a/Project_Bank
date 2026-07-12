@@ -1,10 +1,13 @@
 # tests/test_processing.py
 
+import json
+from pathlib import Path
 from typing import Any, Dict, List, cast
 
 import pandas as pd
 
-from src.processing import card_number_generator, filter_by_currency, transaction_descriptions
+from src.generators.generators import card_number_generator, filter_by_currency, transaction_descriptions
+from src.processing import load_transactions_from_json
 
 # Пример данных для мока
 MOCK_DF = pd.DataFrame(
@@ -34,7 +37,6 @@ MOCK_DF = pd.DataFrame(
     ]
 )
 
-# Используем cast, чтобы обойти проблему с pandas-stubs
 MOCK_TRANSACTIONS: List[Dict[str, Any]] = cast(List[Dict[str, Any]], MOCK_DF.to_dict(orient="records"))
 MOCK_EXCEL_DATA = MOCK_DF
 
@@ -42,8 +44,6 @@ MOCK_EXCEL_DATA = MOCK_DF
 def test_filter_by_currency_usd() -> None:
     """Тестирует фильтрацию транзакций по валюте USD."""
     result = list(filter_by_currency(MOCK_TRANSACTIONS, "USD"))
-    # expected_filtered должен соответствовать MOCK_TRANSACTIONS
-    # Только транзакция с id=2 имеет currency_code="USD"
     expected_filtered = [
         {
             "id": 2,
@@ -63,8 +63,6 @@ def test_filter_by_currency_usd() -> None:
 def test_filter_by_currency_rub() -> None:
     """Тестирует фильтрацию транзакций по валюте RUB."""
     result = list(filter_by_currency(MOCK_TRANSACTIONS, "RUB"))
-    # expected_filtered должен соответствовать MOCK_TRANSACTIONS
-    # Только транзакция с id=1 имеет currency_code="RUB"
     expected_filtered = [
         {
             "id": 1,
@@ -83,7 +81,6 @@ def test_filter_by_currency_rub() -> None:
 
 def test_transaction_descriptions() -> None:
     """Тестирует извлечение описаний транзакций."""
-    # mypy теперь уверен в типе MOCK_TRANSACTIONS благодаря выводу типов
     result = list(transaction_descriptions(MOCK_TRANSACTIONS))
     expected = ["Payment", "Transfer"]
     assert result == expected
@@ -99,29 +96,25 @@ def test_card_number_generator() -> None:
 def test_filter_by_currency_no_match() -> None:
     """Тестирует фильтрацию, если валюта не найдена."""
     result = list(filter_by_currency(MOCK_TRANSACTIONS, "GBP"))
-    expected: list = []  # Пустой список
+    expected: list = []
     assert result == expected
 
 
 def test_transaction_descriptions_with_missing_key() -> None:
     """Тестирует извлечение описаний, если ключ отсутствует."""
-    # mypy теперь уверен в типе MOCK_TRANSACTIONS
-    transactions_with_missing = MOCK_TRANSACTIONS + [{"id": 3}]  # Добавляем транзакцию без description
+    transactions_with_missing = MOCK_TRANSACTIONS + [{"id": 3}]
     result = list(transaction_descriptions(transactions_with_missing))
-    expected = ["Payment", "Transfer", ""]  # Для отсутствующего ключа - пустая строка
+    expected = ["Payment", "Transfer", ""]
     assert result == expected
 
 
 def test_card_number_generator_large_range() -> None:
     """Тестирует генерацию номеров карт в большом диапазоне."""
-    # Примечание: f"{number:016d}" не обрезает числа, если они > 9999999999999999
-    # Тест, ожидавший "обрезания", был неверен.
     result = list(card_number_generator(9999999999999997, 9999999999999999))
     expected = [
         "9999 9999 9999 9997",
         "9999 9999 9999 9998",
         "9999 9999 9999 9999",
-        # 10000000000000000 не входит в диапазон (9999999999999997, 9999999999999999)
     ]
     assert result == expected
 
@@ -131,3 +124,44 @@ def test_card_number_generator_single_number() -> None:
     result = list(card_number_generator(1234567890123456, 1234567890123456))
     expected = ["1234 5678 9012 3456"]
     assert result == expected
+
+
+# Тесты для load_transactions_from_json
+
+
+def test_load_transactions_from_json_success(tmp_path: Path) -> None:
+    """Тест успешной загрузки корректного JSON."""
+    data = [{"id": 1, "amount": 100}, {"id": 2, "amount": 200}]
+    file_path = tmp_path / "test.json"
+    with open(file_path, "w", encoding="utf-8") as f:
+        json.dump(data, f)
+
+    result = load_transactions_from_json(str(file_path))
+    assert result == data
+
+
+def test_load_transactions_from_json_file_not_found(tmp_path: Path) -> None:
+    """Тест, если файл не существует."""
+    file_path = tmp_path / "nonexistent.json"
+    result = load_transactions_from_json(str(file_path))
+    assert result == []
+
+
+def test_load_transactions_from_json_invalid_json(tmp_path: Path) -> None:
+    """Тест, если в файле не JSON."""
+    file_path = tmp_path / "invalid.json"
+    with open(file_path, "w", encoding="utf-8") as f:
+        f.write("not a json")
+    result = load_transactions_from_json(str(file_path))
+    assert result == []
+
+
+def test_load_transactions_from_json_not_a_list(tmp_path: Path) -> None:
+    """Тест, если JSON содержит не список (например, словарь)."""
+    data = {"key": "value"}
+    file_path = tmp_path / "dict.json"
+    with open(file_path, "w", encoding="utf-8") as f:
+        json.dump(data, f)
+
+    result = load_transactions_from_json(str(file_path))
+    assert result == []
