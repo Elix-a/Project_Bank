@@ -11,6 +11,39 @@ from src.utils import filter_by_state, sort_by_date
 from src.widget import mask_account_card
 
 
+def normalize_transaction(tr: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    Приводит транзакцию к плоскому виду с ключами amount, currency_code, currency_name.
+    Если есть поле operationAmount – извлекает данные оттуда, иначе оставляет как есть.
+    """
+    if "operationAmount" in tr:
+        op = tr["operationAmount"]
+        tr["amount"] = op.get("amount", 0)
+        tr["currency_code"] = op.get("currency", {}).get("code", "")
+        tr["currency_name"] = op.get("currency", {}).get("name", "")
+        # Удаляем вложенный объект, чтобы не мешал (опционально)
+        del tr["operationAmount"]
+    # Для CSV/Excel дополнительных действий не требуется – они уже плоские
+    return tr
+
+
+def normalize_transactions(transactions: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    """Нормализует все транзакции."""
+    return [normalize_transaction(tr.copy()) for tr in transactions]
+
+
+def format_amount(amount_value: Any) -> str:
+    """Преобразует сумму в читаемую строку (убирает .0, если число целое)."""
+    try:
+        num = float(amount_value)
+        if num.is_integer():
+            return str(int(num))
+        else:
+            return f"{num:.2f}"
+    except (ValueError, TypeError):
+        return str(amount_value)
+
+
 def get_file_choice() -> str:
     """Запрашивает у пользователя формат файла и возвращает путь к выбранному файлу."""
     print("Выберите необходимый пункт меню:")
@@ -68,7 +101,7 @@ def get_status() -> str:
 
 
 def format_transaction(transaction: Dict[str, Any]) -> str:
-    """Форматирует одну транзакцию для вывода."""
+    """Форматирует одну транзакцию для вывода (ожидает нормализованный формат)."""
     date_str = transaction.get("date", "")
     try:
         date_obj = datetime.fromisoformat(date_str.replace("Z", "+00:00"))
@@ -79,9 +112,11 @@ def format_transaction(transaction: Dict[str, Any]) -> str:
     description = transaction.get("description", "")
     from_account = transaction.get("from", "")
     to_account = transaction.get("to", "")
-    amount = transaction.get("amount", "")
+    amount = format_amount(transaction.get("amount", 0))
     currency_code = transaction.get("currency_code", "")
+    currency_name = transaction.get("currency_name", currency_code)
 
+    # Маскировка счетов/карт
     if from_account and to_account:
         accounts = f"{mask_account_card(from_account)} -> {mask_account_card(to_account)}"
     elif to_account:
@@ -89,10 +124,11 @@ def format_transaction(transaction: Dict[str, Any]) -> str:
     else:
         accounts = ""
 
+    # Определяем отображаемую валюту
     if currency_code == "RUB":
         currency_display = "руб."
     else:
-        currency_display = currency_code
+        currency_display = currency_name or currency_code
 
     lines = [f"{formatted_date} {description}"]
     if accounts:
@@ -105,11 +141,14 @@ def main() -> None:
     """Главная функция, реализующая пользовательский интерфейс."""
     print("Привет! Добро пожаловать в программу работы с банковскими транзакциями.")
     file_path = get_file_choice()
-    transactions = load_transactions(file_path)
+    transactions_raw = load_transactions(file_path)
 
-    if not transactions:
+    if not transactions_raw:
         print("Не удалось загрузить транзакции. Программа завершена.")
         return
+
+    # Приводим все транзакции к плоскому формату (единому для JSON/CSV/Excel)
+    transactions = normalize_transactions(transactions_raw)
 
     status = get_status()
     filtered = filter_by_state(transactions, status)
