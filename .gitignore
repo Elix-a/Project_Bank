@@ -26,6 +26,11 @@ share/python-wheels/
 *.egg
 MANIFEST
 
+# Untracked files:
+*.csv  # <-- Это правило игнорирует все файлы с расширением .csv
+*.xlsx # <-- Это правило игнорирует все файлы с расширением .xlsx
+*.xls  # <-- И этот тоже
+
 # PyInstaller
 *.manifest
 *.spec
